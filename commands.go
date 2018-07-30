@@ -4,6 +4,9 @@ import (
 	"github.com/urfave/cli"
 	"fmt"
 	"errors"
+	"sync"
+	"strings"
+	"github.com/go-redis/redis"
 )
 
 var bigKeysCommand = cli.Command{
@@ -16,10 +19,16 @@ var bigKeysCommand = cli.Command{
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			//考虑支持数组
-			Name:        "pattern",
+			Name:        "patterns",
 			Value:       "",
 			Usage:       "",
-			Destination: &InputConfig.bigKeysConfig.pattern,
+			Destination: &InputConfig.bigKeysConfig.patterns,
+		},
+		cli.StringFlag{
+			Name:        "pattern-split",
+			Value:       "@",
+			Usage:       "",
+			Destination: &InputConfig.bigKeysConfig.patternSplit,
 		},
 		cli.IntFlag{
 			Name:        "key-batch",
@@ -52,13 +61,39 @@ var bigKeysCommand = cli.Command{
 		},
 	},
 	Action: func(ctx *cli.Context) error {
-		infoMap := Info(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), SectionServer)
-		//infoMap := GetInfo(SectionServer)
-		if len(infoMap) == 0 {
+
+		var (
+			keys chan string
+			wg   *sync.WaitGroup
+		)
+
+		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
+		if modeInt == -1 {
 			return errors.New("* could not get info from redis server")
 		}
 		fmt.Printf(">>> Searching big keys...\n")
-		fmt.Printf("%d", ctx.Int("scan-thread"))
+
+		if modeInt == 1 {
+			client := Client(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
+			wg.Add(1)
+			patterns := ctx.String("patterns")
+			for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
+				go Scan(client, keys, wg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+			}
+		} else {
+			scanAddresses := GetScanNodesAddresses(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
+			for _, addr := range scanAddresses {
+				patterns := ctx.String("patterns")
+				for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
+					wg.Add(1)
+					client := redis.NewClient(&redis.Options{
+						Addr:     addr,
+						Password: ctx.GlobalString("pwd"),
+					})
+					go Scan(client, keys, wg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+				}
+			}
+		}
 		return nil
 	},
 }

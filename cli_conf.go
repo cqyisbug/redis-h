@@ -13,7 +13,8 @@ type BigKeysConfig struct {
 	elementBatch    int
 	elementInterval int
 	sizeLimit       int
-	pattern         string
+	patterns        string
+	patternSplit    string
 	dump            bool
 }
 
@@ -58,10 +59,11 @@ var DefaultConfig = &CmdConfig{
 	scanThreads:    1,
 	processThreads: 1,
 	bigKeysConfig: &BigKeysConfig{
-		keyBatch:    400,
-		keyInterval: 10,
-		pattern:     "",
-		sizeLimit:   10,
+		keyBatch:     400,
+		keyInterval:  10,
+		patterns:     "",
+		patternSplit: "@",
+		sizeLimit:    10,
 	},
 	deleteKeysConfig: &DeleteKeysConfig{
 		keyBatch:     400,
@@ -79,36 +81,42 @@ var appFlags = []cli.Flag{
 		Name:        "host",
 		Value:       DefaultConfig.host,
 		Usage:       "redis `hostname`",
+		Destination: &InputConfig.host,
 	},
 	cli.IntFlag{
 		Name:        "port",
 		Value:       DefaultConfig.port,
 		Usage:       "redis `port`",
+		Destination: &InputConfig.port,
 	},
 	cli.StringFlag{
 		Name:        "pwd",
 		Value:       DefaultConfig.password,
 		Usage:       "redis `password`",
+		Destination: &InputConfig.password,
 	},
 	cli.IntFlag{
 		Name:        "db",
 		Value:       DefaultConfig.db,
 		Usage:       "redis `database`",
+		Destination: &InputConfig.db,
 	},
+	//cli.IntFlag{
+	//	Name:        "scan-thread",
+	//	Value:       1,
+	//	Usage:       "threads concurrently to scan keys",
+	//	Destination: &InputConfig.scanThreads,
+	//},
 	cli.IntFlag{
-		Name:  "scan-thread",
-		Value: 1,
-		Usage: "threads concurrently to scan keys",
-	},
-	cli.IntFlag{
-		Name:  "process-thread",
-		Value: 3,
-		Usage: "threads concurrently to process keys",
+		Name:        "process-thread",
+		Value:       3,
+		Usage:       "threads concurrently to process keys",
+		Destination: &InputConfig.processThreads,
 	},
 	cli.StringFlag{
-		Name:        "config,c",
-		Value:       "config.ini",
-		Usage:       "config `file`, if not present, this program will create it!",
+		Name:  "config,c",
+		Value: "config.ini",
+		Usage: "config `file`, if not present, this program will create it!",
 	},
 }
 

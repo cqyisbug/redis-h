@@ -8,4 +8,6 @@ const (
 
 	RoleMaster = "master"
 	RoleSlave  = "slave"
+
+	GlobalScanBatch int64 =  200
 )
