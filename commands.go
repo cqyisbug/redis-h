@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"fmt"
 	"errors"
-	"sync"
-	"strings"
+	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/urfave/cli"
+	"math"
+	"strings"
+	"sync"
 )
 
 var bigKeysCommand = cli.Command{
@@ -63,8 +64,9 @@ var bigKeysCommand = cli.Command{
 	Action: func(ctx *cli.Context) error {
 
 		var (
-			keys chan string
-			wg   *sync.WaitGroup
+			keys chan string     = make(chan string, math.MaxInt64)
+			swg  *sync.WaitGroup //scan wait group
+			fwg  *sync.WaitGroup //file wait group
 		)
 
 		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
@@ -75,22 +77,22 @@ var bigKeysCommand = cli.Command{
 
 		if modeInt == 1 {
 			client := Client(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
-			wg.Add(1)
+			swg.Add(1)
 			patterns := ctx.String("patterns")
 			for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
-				go Scan(client, keys, wg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+				go Scan(client, keys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
 			}
 		} else {
 			scanAddresses := GetScanNodesAddresses(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
 			for _, addr := range scanAddresses {
 				patterns := ctx.String("patterns")
 				for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
-					wg.Add(1)
+					swg.Add(1)
 					client := redis.NewClient(&redis.Options{
 						Addr:     addr,
 						Password: ctx.GlobalString("pwd"),
 					})
-					go Scan(client, keys, wg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+					go Scan(client, keys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
 				}
 			}
 		}
