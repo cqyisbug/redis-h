@@ -10,12 +10,12 @@ import (
 func main() {
 
 	app := cli.NewApp()
-	app.Name = ">> Redis Utils <<"
+	app.Name = "* redis horae *"
 	app.Author = "caiqyxyx"
 	app.Email = "cqyisbug@163.com"
 	app.Version = "0.0.1"
 	app.Usage = "Delete Keys(delete) | Find Big Keys(bigkeys) | Show SlowLog(slowlog) |Check Redis Config(check) | Monitor Redis Status(monitor)"
-	app.UsageText = "redis-utils [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS] [ARGS...]"
+	app.UsageText = "redis-h [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS] [ARGS...]"
 
 	app.EnableBashCompletion = true
 
