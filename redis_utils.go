@@ -23,10 +23,11 @@ type ClusterNodes struct {
 	Addr     string
 }
 
-func Client(host string, port int, pwd string) *redis.Client {
+func Client(host string, port int, pwd string, db int) *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     host + ":" + strconv.Itoa(port),
 		Password: pwd,
+		DB:       db,
 	})
 }
 
@@ -37,9 +38,9 @@ func Cluster(host string, port int, pwd string) *redis.ClusterClient {
 	})
 }
 
-func Info(host string, port int, pwd, section string) map[string]string {
+func Info(host string, port int, pwd string, db int, section string) map[string]string {
 	var infoMap = map[string]string{}
-	client := Client(host, port, pwd)
+	client := Client(host, port, pwd, db)
 	defer client.Close()
 	result, _ := client.Info(section).Result()
 	result = strings.TrimSpace(result)
@@ -58,8 +59,8 @@ func Info(host string, port int, pwd, section string) map[string]string {
 	return infoMap
 }
 
-func ModeInt(host string, port int, pwd string) int {
-	modeString := ModeStr(host, port, pwd)
+func ModeInt(host string, port int, pwd string, db int) int {
+	modeString := ModeStr(host, port, pwd, db)
 	var result int
 	switch modeString {
 	case ModeStandalone:
@@ -73,8 +74,8 @@ func ModeInt(host string, port int, pwd string) int {
 
 }
 
-func ModeStr(host string, port int, pwd string) string {
-	infoMap := Info(host, port, pwd, SectionServer)
+func ModeStr(host string, port int, pwd string, db int) string {
+	infoMap := Info(host, port, pwd, db, SectionServer)
 	return infoMap[RedisMode]
 }
 

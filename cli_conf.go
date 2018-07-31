@@ -16,6 +16,7 @@ type BigKeysConfig struct {
 	patterns        string
 	patternSplit    string
 	patternTest     bool
+	ttlOpts         string
 	dump            bool
 }
 
@@ -52,6 +53,7 @@ type CmdConfig struct {
 	slowLogConfig     *SlowLogConfig
 	configCheckConfig *ConfigCheckConfig
 	serverConfig      *ServerConfig
+	emailConfig       *EmailMessage
 }
 
 var DefaultConfig = &CmdConfig{
@@ -77,7 +79,7 @@ var DefaultConfig = &CmdConfig{
 	},
 }
 
-var InputConfig *CmdConfig
+var InputConfig = &CmdConfig{}
 
 var appFlags = []cli.Flag{
 	cli.StringFlag{
@@ -130,6 +132,54 @@ var appFlags = []cli.Flag{
 		Destination: &InputConfig.cron,
 	},
 	cli.StringFlag{
+		Name:        "email-user",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.EmailUserName,
+	},
+	cli.StringFlag{
+		Name:        "email-pwd",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.EmailPassword,
+	},
+	cli.StringFlag{
+		Name:        "email-to-users",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.To,
+	},
+	cli.StringFlag{
+		Name:        "email-cc-users",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.CC,
+	},
+	cli.StringFlag{
+		Name:        "email-subject",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.Subject,
+	},
+	cli.StringFlag{
+		Name:        "email-body",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.Body,
+	},
+	cli.StringFlag{
+		Name:        "smtp-host",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.EmailSMTPServerHost,
+	},
+	cli.IntFlag{
+		Name:        "smtp-port",
+		Value:       25,
+		Usage:       "",
+		Destination: &InputConfig.emailConfig.EmailSMTPServerPort,
+	},
+	cli.StringFlag{
 		Name:  "config,c",
 		Value: "config.ini",
 		Usage: "config `file`, if not present, this program will create it!",
@@ -145,15 +195,6 @@ var appCommands = []cli.Command{
 }
 
 func beforeCommand(ctx *cli.Context) error {
-
-	InputConfig = &CmdConfig{
-		host:           ctx.GlobalString("host"),
-		port:           ctx.GlobalInt("port"),
-		password:       ctx.GlobalString("pwd"),
-		db:             ctx.GlobalInt("db"),
-		scanThreads:    ctx.GlobalInt("scan-thread"),
-		processThreads: ctx.GlobalInt("process-thread"),
-	}
 
 	fmt.Printf("*****************************************************************\n")
 	fmt.Printf("\t\tWelcome to use the Redis-Util\n")

@@ -14,4 +14,23 @@ const (
 	BigKeysFile    = "bigkeys.csv"
 	DeleteKeysFile = "deleteKeys.txt"
 	DumpKeysFile   = "dumpkeys.json"
+
+	TTLLessThan   = "<"
+	TTLLessEqual  = "<="
+	TTLGreatThan  = ">"
+	TTLGreatEqual = ">="
+	TTLBetween    = "<>"
+)
+
+var (
+	BigKeysHeader = []string{
+		"db",
+		"key",
+		"type",
+		"size(Byte)",
+		"size(MB)",
+		"size(GB)",
+		"element_count",
+		"expire",
+	}
 )

@@ -36,6 +36,12 @@ var bigKeysCommand = cli.Command{
 			Usage:       "",
 			Destination: &InputConfig.bigKeysConfig.patternTest,
 		},
+		cli.StringFlag{
+			Name:        "ttl-opts",
+			Value:       "none",
+			Usage:       "",
+			Destination: &InputConfig.bigKeysConfig.ttlOpts,
+		},
 		cli.IntFlag{
 			Name:        "key-batch",
 			Value:       100,
@@ -73,14 +79,14 @@ var bigKeysCommand = cli.Command{
 			swg  *sync.WaitGroup
 		)
 
-		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
+		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), ctx.GlobalInt("db"))
 		if modeInt == -1 {
 			return errors.New("* could not get info from redis server")
 		}
 		fmt.Printf(">>> Searching big keys...\n")
 
 		if modeInt == 1 {
-			client := Client(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
+			client := Client(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), ctx.GlobalInt("db"))
 			swg.Add(1)
 			patterns := ctx.String("patterns")
 			for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
