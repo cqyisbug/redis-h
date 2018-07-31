@@ -1,13 +1,13 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"github.com/go-redis/redis"
 	"github.com/urfave/cli"
-	"math"
-	"strings"
+	"fmt"
+	"errors"
 	"sync"
+	"strings"
+	"github.com/go-redis/redis"
+	"math"
 )
 
 var bigKeysCommand = cli.Command{
@@ -30,6 +30,11 @@ var bigKeysCommand = cli.Command{
 			Value:       "@",
 			Usage:       "",
 			Destination: &InputConfig.bigKeysConfig.patternSplit,
+		},
+		cli.BoolFlag{
+			Name:        "pattern-test",
+			Usage:       "",
+			Destination: &InputConfig.bigKeysConfig.patternTest,
 		},
 		cli.IntFlag{
 			Name:        "key-batch",
@@ -64,9 +69,8 @@ var bigKeysCommand = cli.Command{
 	Action: func(ctx *cli.Context) error {
 
 		var (
-			keys chan string     = make(chan string, math.MaxInt64)
-			swg  *sync.WaitGroup //scan wait group
-			fwg  *sync.WaitGroup //file wait group
+			keys = make(chan string, math.MaxInt64)
+			swg  *sync.WaitGroup
 		)
 
 		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))

@@ -9,5 +9,9 @@ const (
 	RoleMaster = "master"
 	RoleSlave  = "slave"
 
-	GlobalScanBatch int64 =  200
+	GlobalScanBatch int64 = 200
+
+	BigKeysFile    = "bigkeys.csv"
+	DeleteKeysFile = "deleteKeys.txt"
+	DumpKeysFile   = "dumpkeys.json"
 )

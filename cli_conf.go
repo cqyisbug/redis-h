@@ -15,6 +15,7 @@ type BigKeysConfig struct {
 	sizeLimit       int
 	patterns        string
 	patternSplit    string
+	patternTest     bool
 	dump            bool
 }
 
@@ -44,6 +45,8 @@ type CmdConfig struct {
 	command           string
 	scanThreads       int
 	processThreads    int
+	delay             int
+	cron              string
 	bigKeysConfig     *BigKeysConfig
 	deleteKeysConfig  *DeleteKeysConfig
 	slowLogConfig     *SlowLogConfig
@@ -112,6 +115,19 @@ var appFlags = []cli.Flag{
 		Value:       3,
 		Usage:       "threads concurrently to process keys",
 		Destination: &InputConfig.processThreads,
+	},
+	cli.IntFlag{
+		Name:        "delay",
+		Value:       -1,
+		Usage:       "",
+		Destination: &InputConfig.delay,
+	},
+
+	cli.StringFlag{
+		Name:        "cron",
+		Value:       "",
+		Usage:       "",
+		Destination: &InputConfig.cron,
 	},
 	cli.StringFlag{
 		Name:  "config,c",
