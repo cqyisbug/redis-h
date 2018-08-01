@@ -209,7 +209,30 @@ func GetRedisKeyDetail(c interface{ redis.Cmdable }, scanResultKeys chan string,
 }
 
 func GetStringDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+	var (
+		val string
+		err error
+		cnt int
+		keyDetail RedisKeyDetail
+		ttl time.Duration
+	)
+	val,err = c.Get(key).Result()
+	ttl = c.TTL(key).Val()
 
+	cnt = len(val)
+
+	keyDetail = RedisKeyDetail{
+		Database:0,
+		Key:key,
+		TheType:"string",
+		SizeByte:cnt,
+		SizeMB:,
+		SizeGB:,
+		ElementCount:1,
+		TTL:
+	}
+
+	oKey<-keyDetail
 }
 
 func GetHashDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
@@ -217,6 +240,7 @@ func GetHashDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyD
 }
 
 func GetListDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+
 }
 
 func GetSetDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
