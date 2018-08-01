@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 	"sync"
+	"github.com/go-errors/errors"
 )
 
 type RedisClient struct {
@@ -21,6 +22,18 @@ type ClusterNodes struct {
 	SlaveIds []string
 	MasterId string
 	Addr     string
+}
+
+type RedisKeyDetail struct {
+	Database     int
+	Key          string
+	TheType      string
+	SizeByte     int64
+	SizeMB       int32
+	SizeGB       int
+	ElementCount int64
+	TTL          int64
+	Expire       string
 }
 
 func Client(host string, port int, pwd string, db int) *redis.Client {
@@ -143,7 +156,7 @@ func ExpireKey(client interface{ redis.Cmdable }, keys string, duration time.Dur
 
 func Scan(client *redis.Client, keys chan string, wg *sync.WaitGroup, elementBatch int, elementInterval int, pattern string) error {
 	defer wg.Done()
-	defer client.Close()
+	//defer client.Close()
 	var (
 		cursor     uint64 = 0
 		resultKeys []string
@@ -170,4 +183,48 @@ func Scan(client *redis.Client, keys chan string, wg *sync.WaitGroup, elementBat
 		}
 	}
 	return nil
+}
+
+func KeyType(c *redis.Client, key string) (string) {
+	return c.Type(key).Val()
+}
+
+func GetRedisKeyDetail(c *redis.Client, scanResultKeys chan string, NeedPrintKeys chan RedisKeyDetail, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for key := range scanResultKeys {
+		switch KeyType(c, key) {
+		case "string":
+			return GetStringDetail(c, key)
+		case "hash":
+			return GetHashDetail(c, key)
+		case "list":
+			return GetListDetail(c, key)
+		case "set":
+			return GetSetDetail(c, key)
+		case "zset":
+			return GetZSetDetail(c, key)
+		default:
+			return nil, errors.New("* Wrong key : [" + key + "]")
+		}
+	}
+}
+
+func GetStringDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+
+}
+
+func GetHashDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+
+}
+
+func GetListDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+
+}
+
+func GetSetDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+
+}
+
+func GetZSetDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+
 }

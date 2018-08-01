@@ -79,7 +79,9 @@ var DefaultConfig = &CmdConfig{
 	},
 }
 
-var InputConfig = &CmdConfig{}
+var InputConfig = &CmdConfig{
+	bigKeysConfig: &BigKeysConfig{},
+}
 
 var appFlags = []cli.Flag{
 	cli.StringFlag{

@@ -20,10 +20,9 @@ var bigKeysCommand = cli.Command{
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			//考虑支持数组
-			Name:        "patterns",
-			Value:       "",
-			Usage:       "",
-			Destination: &InputConfig.bigKeysConfig.patterns,
+			Name:  "patterns",
+			Value: "",
+			Usage: "",
 		},
 		cli.StringFlag{
 			Name:        "pattern-split",
@@ -75,8 +74,15 @@ var bigKeysCommand = cli.Command{
 	Action: func(ctx *cli.Context) error {
 
 		var (
-			keys = make(chan string, math.MaxInt64)
-			swg  *sync.WaitGroup
+			scanResultKeys = make(chan string, math.MaxInt64)
+			outputKeys     = make(chan RedisKeyDetail, math.MaxInt64)
+			//scan key wait group
+			swg *sync.WaitGroup
+			//get key value wait group
+			gwg *sync.WaitGroup
+			//file handler wait group
+			fwg        *sync.WaitGroup
+			clientPool []*redis.Client
 		)
 
 		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), ctx.GlobalInt("db"))
@@ -87,25 +93,43 @@ var bigKeysCommand = cli.Command{
 
 		if modeInt == 1 {
 			client := Client(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), ctx.GlobalInt("db"))
+			clientPool = append(clientPool, client)
 			swg.Add(1)
 			patterns := ctx.String("patterns")
 			for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
-				go Scan(client, keys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+				go Scan(client, scanResultKeys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+			}
+
+			for i := 0; i < ctx.Int("process-thread"); i++ {
+				go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
 			}
 		} else {
 			scanAddresses := GetScanNodesAddresses(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
 			for _, addr := range scanAddresses {
+				client := redis.NewClient(&redis.Options{
+					Addr:     addr,
+					Password: ctx.GlobalString("pwd"),
+				})
+				clientPool = append(clientPool, client)
 				patterns := ctx.String("patterns")
 				for _, p := range strings.Split(patterns, ctx.String("pattern-split")) {
 					swg.Add(1)
-					client := redis.NewClient(&redis.Options{
-						Addr:     addr,
-						Password: ctx.GlobalString("pwd"),
-					})
-					go Scan(client, keys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
+					go Scan(client, scanResultKeys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
 				}
 			}
+			//for i := 0; i < ctx.Int("process-thread"); i++ {
+			//	go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
+			//}
 		}
+
+		swg.Wait()
+		fwg.Wait()
+		gwg.Wait()
+
+		for _, c := range clientPool {
+			c.Close()
+		}
+
 		return nil
 	},
 }
