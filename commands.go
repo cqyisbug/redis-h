@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/urfave/cli"
-	"fmt"
 	"errors"
-	"sync"
-	"strings"
+	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/urfave/cli"
 	"math"
+	"strings"
+	"sync"
 )
 
 var bigKeysCommand = cli.Command{
@@ -81,8 +81,9 @@ var bigKeysCommand = cli.Command{
 			//get key value wait group
 			gwg *sync.WaitGroup
 			//file handler wait group
-			fwg        *sync.WaitGroup
-			clientPool []*redis.Client
+			fwg               *sync.WaitGroup
+			clientPool        []*redis.Client
+			clusterClientPool []*redis.ClusterClient
 		)
 
 		modeInt := ModeInt(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"), ctx.GlobalInt("db"))
@@ -117,9 +118,17 @@ var bigKeysCommand = cli.Command{
 					go Scan(client, scanResultKeys, swg, ctx.Int("element-batch"), ctx.Int("element-interval"), p)
 				}
 			}
-			//for i := 0; i < ctx.Int("process-thread"); i++ {
-			//	go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
-			//}
+			for _, addr := range scanAddresses {
+				client := redis.NewClusterClient(&redis.ClusterOptions{
+					Addrs:    []string{addr},
+					Password: ctx.GlobalString("pwd"),
+				})
+				clusterClientPool = append(clusterClientPool, client)
+				for i := 0; i < ctx.Int("process-thread"); i++ {
+					gwg.Add(1)
+					go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
+				}
+			}
 		}
 
 		swg.Wait()
@@ -127,6 +136,9 @@ var bigKeysCommand = cli.Command{
 		gwg.Wait()
 
 		for _, c := range clientPool {
+			c.Close()
+		}
+		for _, c := range clusterClientPool {
 			c.Close()
 		}
 

@@ -4,9 +4,8 @@ import (
 	"github.com/go-redis/redis"
 	"strconv"
 	"strings"
-	"time"
 	"sync"
-	"github.com/go-errors/errors"
+	"time"
 )
 
 type RedisClient struct {
@@ -46,7 +45,7 @@ func Client(host string, port int, pwd string, db int) *redis.Client {
 
 func Cluster(host string, port int, pwd string) *redis.ClusterClient {
 	return redis.NewClusterClient(&redis.ClusterOptions{
-		Addrs:    []string{host + ":" + strconv.Itoa(port),},
+		Addrs:    []string{host + ":" + strconv.Itoa(port)},
 		Password: pwd,
 	})
 }
@@ -185,46 +184,45 @@ func Scan(client *redis.Client, keys chan string, wg *sync.WaitGroup, elementBat
 	return nil
 }
 
-func KeyType(c *redis.Client, key string) (string) {
+func KeyType(c interface{ redis.Cmdable }, key string) string {
 	return c.Type(key).Val()
 }
 
-func GetRedisKeyDetail(c *redis.Client, scanResultKeys chan string, NeedPrintKeys chan RedisKeyDetail, wg *sync.WaitGroup) {
+func GetRedisKeyDetail(c interface{ redis.Cmdable }, scanResultKeys chan string, NeedPrintKeys chan RedisKeyDetail, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for key := range scanResultKeys {
 		switch KeyType(c, key) {
 		case "string":
-			return GetStringDetail(c, key)
+			GetStringDetail(c, key, NeedPrintKeys)
 		case "hash":
-			return GetHashDetail(c, key)
+			GetHashDetail(c, key, NeedPrintKeys)
 		case "list":
-			return GetListDetail(c, key)
+			GetListDetail(c, key, NeedPrintKeys)
 		case "set":
-			return GetSetDetail(c, key)
+			GetSetDetail(c, key, NeedPrintKeys)
 		case "zset":
-			return GetZSetDetail(c, key)
+			GetZSetDetail(c, key, NeedPrintKeys)
 		default:
-			return nil, errors.New("* Wrong key : [" + key + "]")
+			return
 		}
 	}
 }
 
-func GetStringDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+func GetStringDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
 
 }
 
-func GetHashDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+func GetHashDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
 
 }
 
-func GetListDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+func GetListDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+}
+
+func GetSetDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
 
 }
 
-func GetSetDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
-
-}
-
-func GetZSetDetail(c *redis.Client, key string) (*RedisKeyDetail, error) {
+func GetZSetDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
 
 }
