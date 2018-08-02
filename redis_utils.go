@@ -24,15 +24,15 @@ type ClusterNodes struct {
 }
 
 type RedisKeyDetail struct {
-	Database     int
-	Key          string
-	TheType      string
-	SizeByte     int64
-	SizeMB       int32
-	SizeGB       int
-	ElementCount int64
-	TTL          int64
-	Expire       string
+	Database         int
+	Key              string
+	TheType          string
+	SizeByte         int64
+	SizeMB           int32
+	SizeGB           int
+	NumberOfElements int64
+	TTL              int64
+	Expiry           string
 }
 
 func Client(host string, port int, pwd string, db int) *redis.Client {
@@ -188,65 +188,64 @@ func KeyType(c interface{ redis.Cmdable }, key string) string {
 	return c.Type(key).Val()
 }
 
-func GetRedisKeyDetail(c interface{ redis.Cmdable }, scanResultKeys chan string, NeedPrintKeys chan RedisKeyDetail, wg *sync.WaitGroup) {
+func GetRedisKeyDetail(c interface{ redis.Cmdable }, db int, scanResultKeys chan string, NeedPrintKeys chan RedisKeyDetail, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for key := range scanResultKeys {
 		switch KeyType(c, key) {
 		case "string":
-			GetStringDetail(c, key, NeedPrintKeys)
+			GetStringDetail(c, db, key, NeedPrintKeys)
 		case "hash":
-			GetHashDetail(c, key, NeedPrintKeys)
+			GetHashDetail(c, db, key, NeedPrintKeys)
 		case "list":
-			GetListDetail(c, key, NeedPrintKeys)
+			GetListDetail(c, db, key, NeedPrintKeys)
 		case "set":
-			GetSetDetail(c, key, NeedPrintKeys)
+			GetSetDetail(c, db, key, NeedPrintKeys)
 		case "zset":
-			GetZSetDetail(c, key, NeedPrintKeys)
+			GetZSetDetail(c, db, key, NeedPrintKeys)
 		default:
 			return
 		}
 	}
 }
 
-func GetStringDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+func GetStringDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan RedisKeyDetail) {
 	var (
-		val string
-		err error
-		cnt int
+		val       string
+		count     int
 		keyDetail RedisKeyDetail
-		ttl time.Duration
+		ttl       time.Duration
 	)
-	val,err = c.Get(key).Result()
+	val, _ = c.Get(key).Result()
 	ttl = c.TTL(key).Val()
-
-	cnt = len(val)
+	count = len(val)
 
 	keyDetail = RedisKeyDetail{
-		Database:0,
-		Key:key,
-		TheType:"string",
-		SizeByte:cnt,
-		SizeMB:,
-		SizeGB:,
-		ElementCount:1,
-		TTL:
+		Database:         db,
+		Key:              key,
+		TheType:          "string",
+		SizeByte:         int64(count),
+		SizeMB:           int32(count / 1024),
+		SizeGB:           count / (1024 * 1024),
+		NumberOfElements: 1,
+		TTL:              Nano2Second(ttl),
+		Expiry:           GetExpireTime(ttl),
 	}
 
-	oKey<-keyDetail
+	oKey <- keyDetail
 }
 
-func GetHashDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
-
-}
-
-func GetListDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+func GetHashDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan RedisKeyDetail) {
 
 }
 
-func GetSetDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+func GetListDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan RedisKeyDetail) {
 
 }
 
-func GetZSetDetail(c interface{ redis.Cmdable }, key string, oKey chan RedisKeyDetail) {
+func GetSetDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan RedisKeyDetail) {
+
+}
+
+func GetZSetDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan RedisKeyDetail) {
 
 }

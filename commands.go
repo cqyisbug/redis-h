@@ -102,7 +102,7 @@ var bigKeysCommand = cli.Command{
 			}
 
 			for i := 0; i < ctx.Int("process-thread"); i++ {
-				go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
+				go GetRedisKeyDetail(client, ctx.GlobalInt("db"), scanResultKeys, outputKeys, gwg)
 			}
 		} else {
 			scanAddresses := GetScanNodesAddresses(ctx.GlobalString("host"), ctx.GlobalInt("port"), ctx.GlobalString("pwd"))
@@ -110,6 +110,7 @@ var bigKeysCommand = cli.Command{
 				client := redis.NewClient(&redis.Options{
 					Addr:     addr,
 					Password: ctx.GlobalString("pwd"),
+					DB:       ctx.GlobalInt("db"),
 				})
 				clientPool = append(clientPool, client)
 				patterns := ctx.String("patterns")
@@ -126,7 +127,8 @@ var bigKeysCommand = cli.Command{
 				clusterClientPool = append(clusterClientPool, client)
 				for i := 0; i < ctx.Int("process-thread"); i++ {
 					gwg.Add(1)
-					go GetRedisKeyDetail(client, scanResultKeys, outputKeys, gwg)
+					//cluster 模式只有0
+					go GetRedisKeyDetail(client, 0, scanResultKeys, outputKeys, gwg)
 				}
 			}
 		}

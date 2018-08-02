@@ -19,5 +19,5 @@ func FileExists(filename string) bool {
 }
 
 func GetBigKeysHeader() string {
-	return fmt.Sprintf(FormatBigKeysHeader, "database", "key", "type", "size(Byte)", "size(MB)", "size(GB)", "element_count", "ttl", "expire")
+	return fmt.Sprintf(FormatBigKeysHeader, "database", "key", "type", "size(Byte)", "size(MB)", "size(GB)", "number_of_elements", "ttl", "expiry")
 }
