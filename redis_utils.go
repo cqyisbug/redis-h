@@ -192,15 +192,15 @@ func GetRedisKeyDetail(c interface{ redis.Cmdable }, db int, scanResultKeys chan
 	defer wg.Done()
 	for key := range scanResultKeys {
 		switch KeyType(c, key) {
-		case "string":
+		case RedisTypeString:
 			GetStringDetail(c, db, key, NeedPrintKeys)
-		case "hash":
+		case RedisTypeHash:
 			GetHashDetail(c, db, key, NeedPrintKeys)
-		case "list":
+		case RedisTypeList:
 			GetListDetail(c, db, key, NeedPrintKeys)
-		case "set":
+		case RedisTypeSet:
 			GetSetDetail(c, db, key, NeedPrintKeys)
-		case "zset":
+		case RedisTypeZSet:
 			GetZSetDetail(c, db, key, NeedPrintKeys)
 		default:
 			return
@@ -222,7 +222,7 @@ func GetStringDetail(c interface{ redis.Cmdable }, db int, key string, oKey chan
 	keyDetail = RedisKeyDetail{
 		Database:         db,
 		Key:              key,
-		TheType:          "string",
+		TheType:          RedisTypeString,
 		SizeByte:         int64(count),
 		SizeMB:           int32(count / 1024),
 		SizeGB:           count / (1024 * 1024),

@@ -20,6 +20,12 @@ const (
 	TTLGreatThan  = ">"
 	TTLGreatEqual = ">="
 	TTLBetween    = "<>"
+
+	RedisTypeString = "string"
+	RedisTypeHash   = "hash"
+	RedisTypeSet    = "set"
+	RedisTypeZSet   = "zset"
+	RedisTypeList   = "list"
 )
 
 var (
